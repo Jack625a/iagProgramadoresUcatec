@@ -1,0 +1,19 @@
+{
+    "cuentas": [
+        {
+            "username": "admin",
+            "password": "admin",
+            "balance": 100
+        },
+        {
+            "username": "user",
+            "password": "user",
+            "balance": 200
+        },
+        {
+            "username": "user2",
+            "password": "user2",
+            "balance": 300
+        }
+    ]
+}
