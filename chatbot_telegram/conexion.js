@@ -28,7 +28,7 @@ function enviarMensajeBotTelegram(mensaje,numero,api,token,imagen){
         var respuesta=UrlFetchApp.fetch(api+"bot"+token+"/",opciones);
         var jsonRespuesta=JSON.parse(respuesta.getContentText());
     }catch(error){
-
+        
     }
 }
 
@@ -82,6 +82,61 @@ return JSON.stringify(respuestaJSON);
 };
 
 //Funcion para la notificacion//
-function eventoNotificacion(){
+function eventoNotificacion(texto,conversaciones){
+    var respuestaJSON={};
+    try{
+        var historial=[{"role":"system","content":hojaConfiguracion.getRange(2,4).getValue()}];
+        var conversacionesJSON=JSON.parse(conversaciones);
+
+        //Verificar las conversacionJson
+        if(conversacionesJSON.length>0){
+            for(var i=0;i<conversacionesJSON.length;i++){
+                historial.push({"role":"user","content":conversacionesJSON[i].entrada});
+                historial.push({"role":"assitant","content":conversacionesJSON[i].salida});
+            }
+        }
+        historial.push({"role":"user","content":texto});
+        var payload={
+            "messages":historial,
+            "model":"gpt-3.5-turbo",
+            "temperature":parseFloat(hojaConfiguracion.getRange(2,5).getValue()),
+            "max_tokens":parseInt(hojaConfiguracion.getRange(2,6).getValue()),
+            "presence_penalty":parseFloat(hojaConfiguracion.getRange(2,9).getValue()),
+            "frequency_penalty":parseFloat(hojaConfiguracion.getRange(2,8).getValue()),
+            "top_p":parseFloat(hojaConfiguracion.getRange(2,7).getValue()),
+            "stop": hojaConfiguracion.getRange(2,10).getValue()
+
+        };
+        var opciones={
+            'headers':{
+                "Content-Type": "application/json",
+                "Authorization": "Bearer "+hojaConfiguracion.getRange(2,3).getValue()},
+                'method':"POST",
+                'payload':JSON.stringify(payload)
+            
+            
+        };
+
+        var respuesta=UrlFetchApp.fetch(hojaConfiguracion.getRange(2,2).getValue(),opciones);
+        var respuestaJSON=JSON.parse(respuesta.getContentText());
+        if(respuestaJSON.choices&&respuestaJSON.choices[0].message&&respuestaJSON.choices[0].message.content){
+            var mensajeChat=respuestaJSON.choices[0].message.content;
+            if(mensajeChat.substring(0,2)=="\n\n"){
+                mensajeChat=mensajeChat.substring(2,mensajeChat.length);
+
+            }else if(mensajeChat.substring(0,1)=='\n'){
+                mensajeChat=mensajeChat.substring(1,mensajeChat.length);
+            }
+            respuestaJSON.message=mensajeChat;
+
+        }else{
+            respuestaJSON.message="No se pudo obtener respuesta del Modelo GPT";
+        }
+        respuestaJSON.status="0";
+    }catch(error){
+        respuestaJSON.status="-1";
+        respuestaJSON.message=error.toString();
+    }
+    return JSON.stringify(respuestaJSON);
 
 }
